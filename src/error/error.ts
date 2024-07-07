@@ -9,3 +9,14 @@ function UserExistsError(msg:string){
     //error.user = getUser();
     return error 
 }
+
+interface UserNotActive extends Error{
+    name:"UserNotActive",
+    user:string
+}
+
+function UserNotActive(msg:string){
+    const error = new Error(msg) as UserNotActive;
+    error.name = "UserNotActive";
+    return error;
+}

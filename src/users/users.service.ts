@@ -10,28 +10,6 @@ import { User } from '@prisma/client';
 export class UsersService {
   constructor(private prisma:PrismaService, private jwtService: JwtService){}
 
-  async verifyEmail(token:string):Promise<boolean>{
-    const verifactionToken = await this.prisma.verificationToken.findUnique({
-      where:{token},
-      include:{user:true}
-    });
-
-    if (verifactionToken && verifactionToken.expiresAt > new Date()){
-      const user = await this.prisma.user.findFirst({where:{id:verifactionToken.userId}})
-      await this.prisma.verificationToken.create({
-        data:{
-          token: this.jwtService.sign(user.email),
-          userId: user.id,
-          expiresAt: new Date(Date.now() + 24*60*60*1000) 
-        }
-      })
-      return true
-    }
-    return false
-  }
-
-  
-
   async doesUserExist(username:string,email:string):Promise<number>{
     const user = this.prisma.user.count({
       where:{
@@ -58,6 +36,14 @@ export class UsersService {
     return user;
   }
 
+  async activedUser(username:string):Promise<void>{
+    const user = await this.prisma.user.findFirst({
+      where:{username}
+    })
+    user.actived=true;
+    
+  }
+
   findAll() {
     return this.prisma.user.findMany();
   }
@@ -65,11 +51,16 @@ export class UsersService {
   findOne(username: string) {
     return this.prisma.user.findFirst({where:{username:username}});
   }
+  findById(id: number) {
+    return this.prisma.user.findFirst({where:{id}});
+  }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return this.prisma.user.update({
-      where:{id},
-      data:updateUserDto
+
+
+  async updateActiveState(username) {
+    return await this.prisma.user.update({
+      where:{username},
+      data:{actived:true}
     })
   }
 
